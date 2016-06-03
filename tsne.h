@@ -38,27 +38,27 @@
 template<typename T>
 static inline T sign(T x) { return (x == .0 ? .0 : (x < .0 ? -1.0 : 1.0)); }
 
-
+template<typename T>
 class TSNE
 {
 public:
-    void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int rand_seed,
+    void run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
              bool skip_random_init, int max_iter=1000, int stop_lying_iter=250, int mom_switch_iter=250);
-    bool load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed);
-    void save_data(double* data, int* landmarks, double* costs, int n, int d);
-    void symmetrizeMatrix(unsigned int** row_P, unsigned int** col_P, double** val_P, int N); // should be static!
+    bool load_data(T** data, int* n, int* d, int* no_dims, T* theta, T* perplexity, int* rand_seed);
+    void save_data(T* data, int* landmarks, T* costs, int n, int d);
+    void symmetrizeMatrix(unsigned int** row_P, unsigned int** col_P, T** val_P, int N); // should be static!
 
 
 private:
-    void computeGradient(double* P, unsigned int* inp_row_P, unsigned int* inp_col_P, double* inp_val_P, double* Y, int N, int D, double* dC, double theta);
-    void computeExactGradient(double* P, double* Y, int N, int D, double* dC);
-    double evaluateError(double* P, double* Y, int N, int D);
-    double evaluateError(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, int N, int D, double theta);
-    void zeroMean(double* X, int N, int D);
-    void computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity);
-    void computeGaussianPerplexity(double* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, double** _val_P, double perplexity, int K);
-    void computeSquaredEuclideanDistance(double* X, int N, int D, double* DD);
-    double randn();
+    void computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, int D, T* dC, T theta);
+    void computeExactGradient(T* P, T* Y, int N, int D, T* dC);
+    T evaluateError(T* P, T* Y, int N, int D);
+    T evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, int D, T theta);
+    void zeroMean(T* X, int N, int D);
+    void computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity);
+    void computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K);
+    void computeSquaredEuclideanDistance(T* X, int N, int D, T* DD);
+    T randn();
 };
 
 #endif
