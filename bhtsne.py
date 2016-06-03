@@ -15,7 +15,7 @@ Example:
 
 The output will not be normalised, maybe the below one-liner is of interest?:
 
-    python -c 'import numpy;  from sys import stdin, stdout; 
+    python -c 'import numpy;  from sys import stdin, stdout;
         d = numpy.loadtxt(stdin); d -= d.min(axis=0); d /= d.max(axis=0);
         numpy.savetxt(stdout, d, fmt="%.8f", delimiter="\t")'
 
@@ -51,7 +51,7 @@ import numpy as np
 
 ### Constants
 IS_WINDOWS = True if system() == 'Windows' else False
-BH_TSNE_BIN_PATH = path_join(dirname(__file__), 'windows', 'bh_tsne.exe') if IS_WINDOWS else path_join(dirname(__file__), 'bh_tsne')
+BH_TSNE_BIN_PATH = path_join(dirname(__file__), 'windows', 'bh_tsne.exe') if IS_WINDOWS else path_join(dirname(__file__), 'out', 'bh_tsne')
 assert isfile(BH_TSNE_BIN_PATH), ('Unable to find the bh_tsne binary in the '
     'same directory as this script, have you forgotten to compile it?: {}'
     ).format(BH_TSNE_BIN_PATH)

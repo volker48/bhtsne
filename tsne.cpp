@@ -41,6 +41,7 @@
 #include "vptree.h"
 #include "sptree.h"
 #include "tsne.h"
+#include "sptree.cpp"
 
 
 using namespace std;
@@ -204,7 +205,7 @@ void TSNE::computeGradient(double* P, unsigned int* inp_row_P, unsigned int* inp
 {
 
     // Construct space-partitioning tree on current map
-    SPTree* tree = new SPTree(D, Y, N);
+    SPTree<double>* tree = new SPTree<double>(D, Y, N);
 
     // Compute all terms required for t-SNE gradient
     double sum_Q = .0;
@@ -314,7 +315,7 @@ double TSNE::evaluateError(unsigned int* row_P, unsigned int* col_P, double* val
 {
 
     // Get estimate of normalization term
-    SPTree* tree = new SPTree(D, Y, N);
+    SPTree<double>* tree = new SPTree<double>(D, Y, N);
     double* buff = (double*) calloc(D, sizeof(double));
     double sum_Q = .0;
     for(int n = 0; n < N; n++) tree->computeNonEdgeForces(n, theta, buff, &sum_Q);
@@ -432,14 +433,14 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, unsigned int** _ro
     for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + (unsigned int) K;
 
     // Build ball tree on data set
-    VpTree<DataPoint, euclidean_distance>* tree = new VpTree<DataPoint, euclidean_distance>();
-    vector<DataPoint> obj_X(N, DataPoint(D, -1, X));
-    for(int n = 0; n < N; n++) obj_X[n] = DataPoint(D, n, X + n * D);
+    VpTree<DataPoint<double>, euclidean_distance>* tree = new VpTree<DataPoint<double>, euclidean_distance>();
+    vector<DataPoint<double> > obj_X(N, DataPoint<double>(D, -1, X));
+    for(int n = 0; n < N; n++) obj_X[n] = DataPoint<double>(D, n, X + n * D);
     tree->create(obj_X);
 
     // Loop over all points to find nearest neighbors
     printf("Building tree...\n");
-    vector<DataPoint> indices;
+    vector<DataPoint<double> > indices;
     vector<double> distances;
     for(int n = 0; n < N; n++) {
 

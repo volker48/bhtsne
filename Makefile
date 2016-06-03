@@ -1,9 +1,9 @@
 all:
 	mkdir -p out
-	g++ -O2 sptree.cpp tsne.cpp -o out/bh_tsne
+	g++ -O2 tsne.cpp -o out/bh_tsne
 
 clean:
 	rm -f out/*
 
 test:
-	echo "all good :) "
+	cat testdata/eye2.txt | ./bhtsne.py -d 2 -p 0.1 -r 0
