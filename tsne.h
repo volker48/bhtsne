@@ -61,4 +61,12 @@ private:
     static T randn();
 };
 
+
+
+extern "C" {
+    int run_tSNE_float64(double *inputData, double *outputData, int origN, int D, int no_dims, double theta, double perplexity, int rand_seed);
+    int run_tSNE_float32(float *inputData, float *outputData, int origN, int D, int no_dims, float theta, float perplexity, int rand_seed);
+}
+
+
 #endif

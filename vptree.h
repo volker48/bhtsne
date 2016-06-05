@@ -102,7 +102,7 @@ T euclidean_distance(const DataPoint<T> &t1, const DataPoint<T> &t2) {
 }
 
 
-template<typename T, double (*distance)( const T&, const T& )>
+template<typename T, typename T2, T2 (*distance)( const T&, const T& )>
 class VpTree
 {
 public:
@@ -123,7 +123,7 @@ public:
     }
 
     // Function that uses the tree to find the k nearest neighbors of target
-    void search(const T& target, int k, std::vector<T>* results, std::vector<double>* distances)
+    void search(const T& target, int k, std::vector<T>* results, std::vector<T2>* distances)
     {
 
         // Use a priority queue to store intermediate results on
@@ -150,13 +150,13 @@ public:
 
 private:
     std::vector<T> _items;
-    double _tau;
+    T2 _tau;
 
     // Single node of a VP tree (has a point and radius; left children are closer to point than the radius)
     struct Node
     {
         int index;              // index of point in node
-        double threshold;       // radius(?)
+        T2 threshold;       // radius(?)
         Node* left;             // points closer by than threshold
         Node* right;            // points farther away than threshold
 
@@ -172,10 +172,10 @@ private:
 
     // An item on the intermediate result queue
     struct HeapItem {
-        HeapItem( int index, double dist) :
+        HeapItem( int index, T2 dist) :
         index(index), dist(dist) {}
         int index;
-        double dist;
+        T2 dist;
         bool operator<(const HeapItem& o) const {
             return dist < o.dist;
         }
@@ -205,7 +205,7 @@ private:
         if (upper - lower > 1) {      // if we did not arrive at leaf yet
 
             // Choose an arbitrary point and move it to the start
-            int i = (int) ((double)rand() / RAND_MAX * (upper - lower - 1)) + lower;
+            int i = (int) ((T2)rand() / RAND_MAX * (upper - lower - 1)) + lower;
             std::swap(_items[lower], _items[i]);
 
             // Partition around the median distance
@@ -234,7 +234,7 @@ private:
         if(node == NULL) return;     // indicates that we're done here
 
         // Compute distance between target and current node
-        double dist = distance(_items[node->index], target);
+        T2 dist = distance(_items[node->index], target);
 
         // If current node within radius tau
         if(dist < _tau) {

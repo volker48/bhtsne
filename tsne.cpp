@@ -439,7 +439,7 @@ void TSNE<T>::computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_
     for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + (unsigned int) K;
 
     // Build ball tree on data set
-    VpTree<DataPoint<T>, euclidean_distance>* tree = new VpTree<DataPoint<T>, euclidean_distance>();
+    VpTree<DataPoint<T>, T, euclidean_distance>* tree = new VpTree<DataPoint<T>, T, euclidean_distance>();
     vector<DataPoint<T> > obj_X(N, DataPoint<T>(D, -1, X));
     for(int n = 0; n < N; n++) obj_X[n] = DataPoint<T>(D, n, X + n * D);
     tree->create(obj_X);
@@ -720,7 +720,15 @@ void TSNE<T>::save_data(T* data, int* landmarks, T* costs, int n, int d) {
 
 
 template<typename T>
-void run_tSNE(T *data, int origN, int D, int no_dims, T theta, T perplexity, T rand_seed) {
+int run_tSNE(T *inputData, T *outputData, int origN, int D, int no_dims, T theta, T perplexity, int rand_seed) {
+	TSNE<T>::run(inputData, origN, D, outputData, no_dims, perplexity, theta, rand_seed, false);
+    return 0;
+}
+
+
+
+template<typename T>
+void run_tSNE_andSave(T *inputData, int origN, int D, int no_dims, T theta, T perplexity, int rand_seed) {
 
     // Define some variables
 
@@ -735,7 +743,9 @@ void run_tSNE(T *data, int origN, int D, int no_dims, T theta, T perplexity, T r
 	T* Y = (T*) malloc(N * no_dims * sizeof(T));
 	T* costs = (T*) calloc(N, sizeof(T));
     if(Y == NULL || costs == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-	TSNE<T>::run(data, N, D, Y, no_dims, perplexity, theta, rand_seed, false);
+
+
+    run_tSNE(inputData, Y, origN, D, no_dims, theta, perplexity, rand_seed);
 
 	// Save the results
 	TSNE<T>::save_data(Y, landmarks, costs, N, no_dims);
@@ -746,6 +756,17 @@ void run_tSNE(T *data, int origN, int D, int no_dims, T theta, T perplexity, T r
 	free(landmarks); landmarks = NULL;
 }
 
+
+
+int run_tSNE_float64(double *inputData, double *outputData, int origN, int D, int no_dims, double theta, double perplexity, int rand_seed) {
+	return run_tSNE<double>(inputData, outputData, origN, D, no_dims, perplexity, theta, rand_seed);
+}
+
+int run_tSNE_float32(float *inputData, float *outputData, int origN, int D, int no_dims, float theta, float perplexity, int rand_seed) {
+	return run_tSNE<float>(inputData, outputData, origN, D, no_dims, perplexity, theta, rand_seed);
+}
+
+
 // Function that runs the Barnes-Hut implementation of t-SNE
 int main() {
 
@@ -755,7 +776,7 @@ int main() {
 
     // Read the parameters and the dataset
 	if(TSNE<double>::load_data(&data, &origN, &D, &no_dims, &theta, &perplexity, &rand_seed)) {
-        run_tSNE<double>(data, origN, D, no_dims, theta, perplexity, rand_seed);
+        run_tSNE_andSave<double>(data, origN, D, no_dims, theta, perplexity, rand_seed);
         free(data); data = NULL;
     }
 
