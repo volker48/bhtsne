@@ -42,23 +42,23 @@ template<typename T>
 class TSNE
 {
 public:
-    void run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
+    static void run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
              bool skip_random_init, int max_iter=1000, int stop_lying_iter=250, int mom_switch_iter=250);
-    bool load_data(T** data, int* n, int* d, int* no_dims, T* theta, T* perplexity, int* rand_seed);
-    void save_data(T* data, int* landmarks, T* costs, int n, int d);
-    void symmetrizeMatrix(unsigned int** row_P, unsigned int** col_P, T** val_P, int N); // should be static!
+    static bool load_data(T** data, int* n, int* d, int* no_dims, T* theta, T* perplexity, int* rand_seed);
+    static void save_data(T* data, int* landmarks, T* costs, int n, int d);
+    static void symmetrizeMatrix(unsigned int** row_P, unsigned int** col_P, T** val_P, int N); // should be static!
 
 
 private:
-    void computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, int D, T* dC, T theta);
-    void computeExactGradient(T* P, T* Y, int N, int D, T* dC);
-    T evaluateError(T* P, T* Y, int N, int D);
-    T evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, int D, T theta);
-    void zeroMean(T* X, int N, int D);
-    void computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity);
-    void computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K);
-    void computeSquaredEuclideanDistance(T* X, int N, int D, T* DD);
-    T randn();
+    static void computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, int D, T* dC, T theta);
+    static void computeExactGradient(T* P, T* Y, int N, int D, T* dC);
+    static T evaluateError(T* P, T* Y, int N, int D);
+    static T evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, int D, T theta);
+    static void zeroMean(T* X, int N, int D);
+    static void computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity);
+    static void computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K);
+    static void computeSquaredEuclideanDistance(T* X, int N, int D, T* DD);
+    static T randn();
 };
 
 #endif

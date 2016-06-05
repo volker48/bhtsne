@@ -718,39 +718,45 @@ void TSNE<T>::save_data(T* data, int* landmarks, T* costs, int n, int d) {
 }
 
 
+
+template<typename T>
+void run_tSNE(T *data, int origN, int D, int no_dims, T theta, T perplexity, T rand_seed) {
+
+    // Define some variables
+
+    // Read the parameters and the dataset
+    // Make dummy landmarks
+    int N = origN;
+    int* landmarks = (int*) malloc(N * sizeof(int));
+    if(landmarks == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    for(int n = 0; n < N; n++) landmarks[n] = n;
+
+	// Now fire up the SNE implementation
+	T* Y = (T*) malloc(N * no_dims * sizeof(T));
+	T* costs = (T*) calloc(N, sizeof(T));
+    if(Y == NULL || costs == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+	TSNE<T>::run(data, N, D, Y, no_dims, perplexity, theta, rand_seed, false);
+
+	// Save the results
+	TSNE<T>::save_data(Y, landmarks, costs, N, no_dims);
+
+    // Clean up the memory
+	free(Y); Y = NULL;
+	free(costs); costs = NULL;
+	free(landmarks); landmarks = NULL;
+}
+
 // Function that runs the Barnes-Hut implementation of t-SNE
 int main() {
 
     // Define some variables
-	int origN, N, D, no_dims, *landmarks;
-	double perc_landmarks;
+	int origN, D, no_dims, rand_seed;
 	double perplexity, theta, *data;
-    int rand_seed = -1;
-    TSNE<double>* tsne = new TSNE<double>();
 
     // Read the parameters and the dataset
-	if(tsne->load_data(&data, &origN, &D, &no_dims, &theta, &perplexity, &rand_seed)) {
-
-		// Make dummy landmarks
-        N = origN;
-        int* landmarks = (int*) malloc(N * sizeof(int));
-        if(landmarks == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-        for(int n = 0; n < N; n++) landmarks[n] = n;
-
-		// Now fire up the SNE implementation
-		double* Y = (double*) malloc(N * no_dims * sizeof(double));
-		double* costs = (double*) calloc(N, sizeof(double));
-        if(Y == NULL || costs == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-		tsne->run(data, N, D, Y, no_dims, perplexity, theta, rand_seed, false);
-
-		// Save the results
-		tsne->save_data(Y, landmarks, costs, N, no_dims);
-
-        // Clean up the memory
-		free(data); data = NULL;
-		free(Y); Y = NULL;
-		free(costs); costs = NULL;
-		free(landmarks); landmarks = NULL;
+	if(TSNE<double>::load_data(&data, &origN, &D, &no_dims, &theta, &perplexity, &rand_seed)) {
+        run_tSNE<double>(data, origN, D, no_dims, theta, perplexity, rand_seed);
+        free(data); data = NULL;
     }
-    delete(tsne);
+
 }
