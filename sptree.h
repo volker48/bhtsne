@@ -64,9 +64,6 @@ class SPTree
     // Fixed constants
     static const unsigned int QT_NODE_CAPACITY = 1;
 
-    // A buffer we use when doing force computations
-    T* buff;
-
     // Properties of this node in the tree
     SPTree<T>* parent;
     unsigned int dimension;
@@ -102,7 +99,7 @@ public:
     void rebuildTree();
     void getAllIndices(unsigned int* indices);
     unsigned int getDepth();
-    void computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[], T* sum_Q);
+    T computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[]);
     void computeEdgeForces(unsigned int* row_P, unsigned int* col_P, T* val_P, int N, T* pos_f);
     void print();
 

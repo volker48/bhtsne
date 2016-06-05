@@ -187,7 +187,6 @@ void SPTree<T>::init(SPTree<T>* inp_parent, unsigned int D, T* inp_data, T* inp_
     center_of_mass = (T*) malloc(D * sizeof(T));
     for(unsigned int d = 0; d < D; d++) center_of_mass[d] = .0;
 
-    buff = (T*) malloc(D * sizeof(T));
 }
 
 
@@ -200,7 +199,6 @@ SPTree<T>::~SPTree()
     }
     free(children);
     free(center_of_mass);
-    free(buff);
     delete boundary;
 }
 
@@ -365,17 +363,18 @@ unsigned int SPTree<T>::getDepth() {
 
 // Compute non-edge forces using Barnes-Hut algorithm
 template<typename T>
-void SPTree<T>::computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[], T* sum_Q)
+T SPTree<T>::computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[])
 {
-
+    T resultSum = 0;
+    T localbuff[32];
     // Make sure that we spend no time on empty nodes or self-interactions
-    if(cum_size == 0 || (is_leaf && size == 1 && index[0] == point_index)) return;
+    if(cum_size == 0 || (is_leaf && size == 1 && index[0] == point_index)) return resultSum;
 
     // Compute distance between point and center-of-mass
     T D = .0;
     unsigned int ind = point_index * dimension;
-    for(unsigned int d = 0; d < dimension; d++) buff[d] = data[ind + d] - center_of_mass[d];
-    for(unsigned int d = 0; d < dimension; d++) D += buff[d] * buff[d];
+    for(unsigned int d = 0; d < dimension; d++) localbuff[d] = data[ind + d] - center_of_mass[d];
+    for(unsigned int d = 0; d < dimension; d++) D += localbuff[d] * localbuff[d];
 
     // Check whether we can use this node as a "summary"
     T max_width = 0.0;
@@ -389,15 +388,18 @@ void SPTree<T>::computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[
         // Compute and add t-SNE force between point and current node
         D = 1.0 / (1.0 + D);
         T mult = cum_size * D;
-        *sum_Q += mult;
+        resultSum += mult;
         mult *= D;
-        for(unsigned int d = 0; d < dimension; d++) neg_f[d] += mult * buff[d];
+        for(unsigned int d = 0; d < dimension; d++) neg_f[d] += mult * localbuff[d];
     }
     else {
 
         // Recursively apply Barnes-Hut to children
-        for(unsigned int i = 0; i < no_children; i++) children[i]->computeNonEdgeForces(point_index, theta, neg_f, sum_Q);
+        for(unsigned int i = 0; i < no_children; i++) {
+            resultSum += children[i]->computeNonEdgeForces(point_index, theta, neg_f);
+        }
     }
+    return resultSum;
 }
 
 
@@ -405,27 +407,27 @@ void SPTree<T>::computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[
 template<typename T>
 void SPTree<T>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, T* val_P, int N, T* pos_f)
 {
-
-    // Loop over all edges in the graph
-    unsigned int ind1 = 0;
-    T D;
-    //#pragma omp parallel for
     // TODO: need to devise separate buffer for each iteration
     // figure out if ind1 can be precomputed (looks like it can be)
+    #pragma omp parallel for schedule(static)
     for(unsigned int n = 0; n < N; n++) {
+        unsigned int ind1 = n*dimension;
+
         for(unsigned int i = row_P[n]; i < row_P[n + 1]; i++) {
 
+            T localbuff[32];
+
             // Compute pairwise distance and Q-value
-            D = 1.0;
+            T D = 1.0;
             unsigned int ind2 = col_P[i] * dimension;
-            for(unsigned int d = 0; d < dimension; d++) buff[d] = data[ind1 + d] - data[ind2 + d];
-            for(unsigned int d = 0; d < dimension; d++) D += buff[d] * buff[d];
+            for(unsigned int d = 0; d < dimension; d++) localbuff[d] = data[ind1 + d] - data[ind2 + d];
+            for(unsigned int d = 0; d < dimension; d++) D += localbuff[d] * localbuff[d];
             D = val_P[i] / D;
 
             // Sum positive force
-            for(unsigned int d = 0; d < dimension; d++) pos_f[ind1 + d] += D * buff[d];
+            for(unsigned int d = 0; d < dimension; d++) pos_f[ind1 + d] += D * localbuff[d];
         }
-        ind1 += dimension;
+
     }
 }
 

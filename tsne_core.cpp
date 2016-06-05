@@ -251,7 +251,10 @@ void TSNE<T>::computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_c
     T* neg_f = (T*) calloc(N * D, sizeof(T));
     if(pos_f == NULL || neg_f == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     tree->computeEdgeForces(inp_row_P, inp_col_P, inp_val_P, N, pos_f);
-    for(int n = 0; n < N; n++) tree->computeNonEdgeForces(n, theta, neg_f + n * D, &sum_Q);
+    #pragma omp parallel for schedule(guided) reduction(+:sum_Q)
+    for(int n = 0; n < N; n++) {
+        sum_Q += tree->computeNonEdgeForces(n, theta, neg_f + n * D);
+    }
 
     // Compute final t-SNE gradient
     for(int i = 0; i < N * D; i++) {
@@ -359,7 +362,9 @@ T TSNE<T>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* 
     SPTree<T>* tree = new SPTree<T>(D, Y, N);
     T* buff = (T*) calloc(D, sizeof(T));
     T sum_Q = .0;
-    for(int n = 0; n < N; n++) tree->computeNonEdgeForces(n, theta, buff, &sum_Q);
+    for(int n = 0; n < N; n++)  {
+        sum_Q += tree->computeNonEdgeForces(n, theta, buff);
+    }
 
     // Loop over all edges to compute t-SNE error
     int ind1, ind2;
