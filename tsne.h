@@ -42,10 +42,8 @@ template<typename T>
 class TSNE
 {
 public:
-    static void run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
-             bool skip_random_init, int max_iter=1000, int stop_lying_iter=250, int mom_switch_iter=250);
-    static bool load_data(T** data, int* n, int* d, int* no_dims, T* theta, T* perplexity, int* rand_seed);
-    static void save_data(T* data, int* landmarks, T* costs, int n, int d);
+    static int run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
+             bool skip_random_init, bool verbose, int max_iter=1000, int stop_lying_iter=250, int mom_switch_iter=250);
     static void symmetrizeMatrix(unsigned int** row_P, unsigned int** col_P, T** val_P, int N); // should be static!
 
 
@@ -56,7 +54,7 @@ private:
     static T evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, int D, T theta);
     static void zeroMean(T* X, int N, int D);
     static void computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity);
-    static void computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K);
+    static void computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K, bool verbose);
     static void computeSquaredEuclideanDistance(T* X, int N, int D, T* DD);
     static T randn();
 };
@@ -64,8 +62,8 @@ private:
 
 
 extern "C" {
-    int run_tSNE_float64(double *inputData, double *outputData, int N, int in_dims, int out_dims, double theta, double perplexity, int rand_seed);
-    int run_tSNE_float32(float *inputData, float *outputData, int N, int in_dims, int out_dims, float theta, float perplexity, int rand_seed);
+    int run_tSNE_float64(double *inputData, double *outputData, int N, int in_dims, int out_dims, double theta, double perplexity, int rand_seed, bool verbose);
+    int run_tSNE_float32(float *inputData, float *outputData, int N, int in_dims, int out_dims, float theta, float perplexity, int rand_seed, bool verbose);
 }
 
 
