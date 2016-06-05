@@ -60,11 +60,4 @@ private:
 };
 
 
-
-extern "C" {
-    int run_tSNE_float64(double *inputData, double *outputData, int N, int in_dims, int out_dims, double theta, double perplexity, int rand_seed, bool verbose);
-    int run_tSNE_float32(float *inputData, float *outputData, int N, int in_dims, int out_dims, float theta, float perplexity, int rand_seed, bool verbose);
-}
-
-
 #endif

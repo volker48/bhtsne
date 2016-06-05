@@ -1,4 +1,4 @@
-#include "tsne.cpp"
+#include "tsne_core.cpp"
 
 
 // Function that loads data from a t-SNE file
