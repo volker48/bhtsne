@@ -720,32 +720,29 @@ void TSNE<T>::save_data(T* data, int* landmarks, T* costs, int n, int d) {
 
 
 template<typename T>
-int run_tSNE(T *inputData, T *outputData, int origN, int D, int no_dims, T theta, T perplexity, int rand_seed) {
-	TSNE<T>::run(inputData, origN, D, outputData, no_dims, perplexity, theta, rand_seed, false);
+int run_tSNE(T *inputData, T *outputData, int N, int in_dims, int out_dims, T theta, T perplexity, int rand_seed) {
+	TSNE<T>::run(inputData, N, in_dims, outputData, out_dims, perplexity, theta, rand_seed, false);
     return 0;
 }
 
 
 
 template<typename T>
-void run_tSNE_andSave(T *inputData, int origN, int D, int no_dims, T theta, T perplexity, int rand_seed) {
+void run_tSNE_andSave(T *inputData, int N, int D, int no_dims, T theta, T perplexity, int rand_seed) {
+	// Allocate memory for the output
+	T* Y = (T*) malloc(N * no_dims * sizeof(T));
+	if(Y == NULL) { printf("Memory allocation failed!\n"); exit(1); }
 
-    // Define some variables
 
-    // Read the parameters and the dataset
-    // Make dummy landmarks
-    int N = origN;
+    run_tSNE(inputData, Y, N, D, no_dims, theta, perplexity, rand_seed);
+
+    // Make dummy landmarks and costs
     int* landmarks = (int*) malloc(N * sizeof(int));
     if(landmarks == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     for(int n = 0; n < N; n++) landmarks[n] = n;
+    T* costs = (T*) calloc(N, sizeof(T));
+    if(costs == NULL) { printf("Memory allocation failed!\n"); exit(1); }
 
-	// Now fire up the SNE implementation
-	T* Y = (T*) malloc(N * no_dims * sizeof(T));
-	T* costs = (T*) calloc(N, sizeof(T));
-    if(Y == NULL || costs == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-
-
-    run_tSNE(inputData, Y, origN, D, no_dims, theta, perplexity, rand_seed);
 
 	// Save the results
 	TSNE<T>::save_data(Y, landmarks, costs, N, no_dims);
@@ -758,12 +755,12 @@ void run_tSNE_andSave(T *inputData, int origN, int D, int no_dims, T theta, T pe
 
 
 
-int run_tSNE_float64(double *inputData, double *outputData, int origN, int D, int no_dims, double theta, double perplexity, int rand_seed) {
-	return run_tSNE<double>(inputData, outputData, origN, D, no_dims, perplexity, theta, rand_seed);
+int run_tSNE_float64(double *inputData, double *outputData, int Nsamples, int in_dims, int out_dims, double theta, double perplexity, int rand_seed) {
+	return run_tSNE<double>(inputData, outputData, Nsamples, in_dims, out_dims, theta, perplexity, rand_seed);
 }
 
-int run_tSNE_float32(float *inputData, float *outputData, int origN, int D, int no_dims, float theta, float perplexity, int rand_seed) {
-	return run_tSNE<float>(inputData, outputData, origN, D, no_dims, perplexity, theta, rand_seed);
+int run_tSNE_float32(float *inputData, float *outputData, int Nsamples, int in_dims, int out_dims, float theta, float perplexity, int rand_seed) {
+	return run_tSNE<float>(inputData, outputData, Nsamples, in_dims, out_dims, theta, perplexity, rand_seed);
 }
 
 
@@ -771,12 +768,12 @@ int run_tSNE_float32(float *inputData, float *outputData, int origN, int D, int 
 int main() {
 
     // Define some variables
-	int origN, D, no_dims, rand_seed;
+	int N, D, no_dims, rand_seed;
 	double perplexity, theta, *data;
 
     // Read the parameters and the dataset
-	if(TSNE<double>::load_data(&data, &origN, &D, &no_dims, &theta, &perplexity, &rand_seed)) {
-        run_tSNE_andSave<double>(data, origN, D, no_dims, theta, perplexity, rand_seed);
+	if(TSNE<double>::load_data(&data, &N, &D, &no_dims, &theta, &perplexity, &rand_seed)) {
+        run_tSNE_andSave<double>(data, N, D, no_dims, theta, perplexity, rand_seed);
         free(data); data = NULL;
     }
 
