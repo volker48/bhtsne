@@ -37,27 +37,26 @@
 using namespace std;
 
 
-template<typename T>
+template<typename T, int dimension>
 class Cell {
 
-    unsigned int dimension;
-    T* corner;
-    T* width;
+    T corner[dimension];
+    T width[dimension];
 
 
 public:
-    Cell(unsigned int inp_dimension);
-    Cell(unsigned int inp_dimension, T* inp_corner, T* inp_width);
+    Cell();
+    Cell(T* inp_corner, T* inp_width);
     ~Cell();
 
-    T getCorner(unsigned int d);
-    T getWidth(unsigned int d);
+    T getCorner(unsigned int d) const;
+    T getWidth(unsigned int d) const;
     void setCorner(unsigned int d, T val);
     void setWidth(unsigned int d, T val);
-    bool containsPoint(T point[]);
+    bool containsPoint(T point[]) const;
 };
 
-template<typename T>
+template<typename T, int dimension>
 class SPTree
 {
 
@@ -65,34 +64,33 @@ class SPTree
     static const unsigned int QT_NODE_CAPACITY = 1;
 
     // Properties of this node in the tree
-    SPTree<T>* parent;
-    unsigned int dimension;
+    SPTree<T, dimension>* parent;
     bool is_leaf;
     unsigned int size;
     unsigned int cum_size;
 
     // Axis-aligned bounding box stored as a center with half-dimensions to represent the boundaries of this quad tree
-    Cell<T>* boundary;
+    Cell<T, dimension> boundary;
 
     // Indices in this space-partitioning tree node, corresponding center-of-mass, and list of all children
     T* data;
-    T* center_of_mass;
+    T center_of_mass[dimension];
     unsigned int index[QT_NODE_CAPACITY];
 
     // Children
-    SPTree<T>** children;
+    SPTree<T, dimension>** children;
     unsigned int no_children;
 
 public:
-    SPTree(unsigned int D, T* inp_data, unsigned int N);
-    SPTree(unsigned int D, T* inp_data, T* inp_corner, T* inp_width);
-    SPTree(unsigned int D, T* inp_data, unsigned int N, T* inp_corner, T* inp_width);
-    SPTree(SPTree<T>* inp_parent, unsigned int D, T* inp_data, unsigned int N, T* inp_corner, T* inp_width);
-    SPTree(SPTree<T>* inp_parent, unsigned int D, T* inp_data, T* inp_corner, T* inp_width);
+    SPTree(T* inp_data, unsigned int N);
+    SPTree(T* inp_data, T* inp_corner, T* inp_width);
+    SPTree(T* inp_data, unsigned int N, T* inp_corner, T* inp_width);
+    SPTree(SPTree<T, dimension>* inp_parent, T* inp_data, unsigned int N, T* inp_corner, T* inp_width);
+    SPTree(SPTree<T, dimension>* inp_parent, T* inp_data, T* inp_corner, T* inp_width);
     ~SPTree();
     void setData(T* inp_data);
-    SPTree<T>* getParent();
-    void construct(Cell<T> boundary);
+    SPTree<T, dimension>* getParent();
+    void construct(Cell<T, dimension> boundary);
     bool insert(unsigned int new_index);
     void subdivide();
     bool isCorrect();
@@ -104,7 +102,7 @@ public:
     void print();
 
 private:
-    void init(SPTree<T>* inp_parent, unsigned int D, T* inp_data, T* inp_corner, T* inp_width);
+    void init(SPTree<T, dimension>* inp_parent, T* inp_data, T* inp_corner, T* inp_width);
     void fill(unsigned int N);
     unsigned int getAllIndices(unsigned int* indices, unsigned int loc);
     bool isChild(unsigned int test_index, unsigned int start, unsigned int end);

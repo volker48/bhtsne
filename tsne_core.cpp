@@ -165,7 +165,7 @@ int TSNE<T>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, i
 
 	// Initialize solution (randomly)
   if (skip_random_init != true) {
-  	for(int i = 0; i < N * no_dims; i++) Y[i] = randn() * .0001;
+  	for(int i = 0; i < N * no_dims; i++) Y[i] = randn<T>() * .0001;
   }
 
 	// Perform main training loop
@@ -243,7 +243,7 @@ void TSNE<T>::computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_c
 {
 
     // Construct space-partitioning tree on current map
-    SPTree<T>* tree = new SPTree<T>(D, Y, N);
+    SPTree<T, 2>* tree = new SPTree<T, 2>(Y, N);
 
     // Compute all terms required for t-SNE gradient
     T sum_Q = .0;
@@ -361,7 +361,7 @@ T TSNE<T>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* 
 {
 
     // Get estimate of normalization term
-    SPTree<T>* tree = new SPTree<T>(D, Y, N);
+    SPTree<T, 2>* tree = new SPTree<T, 2>(Y, N);
     T* buff = (T*) calloc(D, sizeof(T));
     T sum_Q = .0;
     for(int n = 0; n < N; n++)  {
@@ -569,7 +569,7 @@ void TSNE<T>::computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_
 
 // Symmetrizes a sparse matrix
 template<typename T>
-void TSNE<T>::symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P, T** _val_P, int N) {
+void symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P, T** _val_P, int N) {
 
     // Get sparse matrix
     unsigned int* row_P = *_row_P;
@@ -708,7 +708,7 @@ void TSNE<T>::zeroMean(T* X, int N, int D) {
 
 // Generates a Gaussian random number
 template<typename T>
-T TSNE<T>::randn() {
+T randn() {
 	T x, y, radius;
 	do {
 		x = 2 * (rand() / ((T) RAND_MAX + 1)) - 1;
@@ -726,5 +726,10 @@ T TSNE<T>::randn() {
 
 template<typename T>
 int run_tSNE(T *inputData, T *outputData, int N, int in_dims, int out_dims, T theta, T perplexity, int rand_seed, bool verbose) {
+  if (out_dims !== 2) {
+    printf ("currently supports out_dims == 2 only");
+    return 2
+  }
+
 	return TSNE<T>::run(inputData, N, in_dims, outputData, out_dims, perplexity, theta, rand_seed, false, verbose);
 }

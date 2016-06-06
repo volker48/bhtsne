@@ -39,12 +39,18 @@ template<typename T>
 static inline T sign(T x) { return (x == .0 ? .0 : (x < .0 ? -1.0 : 1.0)); }
 
 template<typename T>
+void symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P, T** _val_P, int N);
+
+template<typename T>
+T randn();
+
+
+template<typename T>
 class TSNE
 {
 public:
     static int run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
              bool skip_random_init, bool verbose, int max_iter=1000, int stop_lying_iter=250, int mom_switch_iter=250);
-    static void symmetrizeMatrix(unsigned int** row_P, unsigned int** col_P, T** val_P, int N); // should be static!
 
 
 private:
@@ -56,8 +62,9 @@ private:
     static void computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity);
     static void computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K, bool verbose);
     static void computeSquaredEuclideanDistance(T* X, int N, int D, T* DD);
-    static T randn();
 };
+
+
 
 
 #endif
