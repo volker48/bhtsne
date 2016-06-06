@@ -46,15 +46,15 @@ template<typename T, int OUTDIM>
 class TSNE
 {
 public:
-    static int run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
+    static int run(T* X, int N, int D, T* Y, T perplexity, T theta, int rand_seed,
              bool skip_random_init, bool verbose, int max_iter=1000, int stop_lying_iter=250, int mom_switch_iter=250);
 
 
 private:
-    static void computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, int D, T* dC, T theta);
-    static void computeExactGradient(T* P, T* Y, int N, int D, T* dC);
-    static T evaluateError(T* P, T* Y, int N, int D);
-    static T evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, int D, T theta);
+    static void computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, T* dC, T theta);
+    static void computeExactGradient(T* P, T* Y, int N, T* dC);
+    static T evaluateError(T* P, T* Y, int N);
+    static T evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, T theta);
     static void zeroMean(T* X, int N, int D);
     static void computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity);
     static void computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K, bool verbose);

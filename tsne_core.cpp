@@ -47,9 +47,10 @@
 using namespace std;
 
 template<typename T, int OUTDIM>// Perform t-SNE
-int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
+int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, T perplexity, T theta, int rand_seed,
                bool skip_random_init, bool verbose, int max_iter, int stop_lying_iter, int mom_switch_iter) {
 
+    int no_dims = OUTDIM;
     // Set random seed
     if (skip_random_init != true) {
       if(rand_seed >= 0) {
@@ -178,8 +179,8 @@ int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T 
 	for(int iter = 0; iter < max_iter; iter++) {
 
         // Compute (approximate) gradient
-        if(exact) computeExactGradient(P, Y, N, no_dims, dY);
-        else computeGradient(P, row_P, col_P, val_P, Y, N, no_dims, dY, theta);
+        if(exact) computeExactGradient(P, Y, N, dY);
+        else computeGradient(P, row_P, col_P, val_P, Y, N, dY, theta);
 
         // Update gains
         for(int i = 0; i < N * no_dims; i++) gains[i] = (sign(dY[i]) != sign(uY[i])) ? (gains[i] + .2) : (gains[i] * .8);
@@ -203,8 +204,8 @@ int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T 
         if (iter > 0 && (iter % 50 == 0 || iter == max_iter - 1)) {
             end = clock();
             T C = .0;
-            if(exact) C = evaluateError(P, Y, N, no_dims);
-            else      C = evaluateError(row_P, col_P, val_P, Y, N, no_dims, theta);  // doing approximate computation here!
+            if(exact) C = evaluateError(P, Y, N);
+            else      C = evaluateError(row_P, col_P, val_P, Y, N, theta);  // doing approximate computation here!
             if (verbose) {
                 if(iter == 0)
                     printf("Iteration %d: error is %f\n", iter + 1, C);
@@ -239,7 +240,7 @@ int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T 
 
 // Compute gradient of the t-SNE cost function (using Barnes-Hut algorithm)
 template<typename T, int OUTDIM>
-void TSNE<T, OUTDIM>::computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, int D, T* dC, T theta)
+void TSNE<T, OUTDIM>::computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, T* dC, T theta)
 {
 
     // Construct space-partitioning tree on current map
@@ -247,19 +248,19 @@ void TSNE<T, OUTDIM>::computeGradient(T* P, unsigned int* inp_row_P, unsigned in
 
     // Compute all terms required for t-SNE gradient
     T sum_Q = .0;
-    T* pos_f = (T*) calloc(N * D, sizeof(T));
-    T* neg_f = (T*) calloc(N * D, sizeof(T));
+    T* pos_f = (T*) calloc(N * OUTDIM, sizeof(T));
+    T* neg_f = (T*) calloc(N * OUTDIM, sizeof(T));
     if(pos_f == NULL || neg_f == NULL) { printf("Memory allocation failed!\n"); exit(1); }
 
     tree->computeEdgeForces(inp_row_P, inp_col_P, inp_val_P, N, pos_f);
 
     #pragma omp parallel for schedule(guided) reduction(+:sum_Q)
     for(int n = 0; n < N; n++) {
-        sum_Q += tree->computeNonEdgeForces(n, theta, neg_f + n * D);
+        sum_Q += tree->computeNonEdgeForces(n, theta, neg_f + n * OUTDIM);
     }
 
     // Compute final t-SNE gradient
-    for(int i = 0; i < N * D; i++) {
+    for(int i = 0; i < N * OUTDIM; i++) {
         dC[i] = pos_f[i] - (neg_f[i] / sum_Q);
     }
     free(pos_f);
@@ -269,15 +270,15 @@ void TSNE<T, OUTDIM>::computeGradient(T* P, unsigned int* inp_row_P, unsigned in
 
 // Compute gradient of the t-SNE cost function (exact)
 template<typename T, int OUTDIM>
-void TSNE<T, OUTDIM>::computeExactGradient(T* P, T* Y, int N, int D, T* dC) {
+void TSNE<T, OUTDIM>::computeExactGradient(T* P, T* Y, int N, T* dC) {
 
 	// Make sure the current gradient contains zeros
-	for(int i = 0; i < N * D; i++) dC[i] = 0.0;
+	for(int i = 0; i < N * OUTDIM; i++) dC[i] = 0.0;
 
     // Compute the squared Euclidean distance matrix
     T* DD = (T*) malloc(N * N * sizeof(T));
     if(DD == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-    computeSquaredEuclideanDistance(Y, N, D, DD);
+    computeSquaredEuclideanDistance(Y, N, OUTDIM, DD);
 
     // Compute Q-matrix and normalization sum
     T* Q    = (T*) malloc(N * N * sizeof(T));
@@ -302,14 +303,14 @@ void TSNE<T, OUTDIM>::computeExactGradient(T* P, T* Y, int N, int D, T* dC) {
     	for(int m = 0; m < N; m++) {
             if(n != m) {
                 T mult = (P[nN + m] - (Q[nN + m] / sum_Q)) * Q[nN + m];
-                for(int d = 0; d < D; d++) {
+                for(int d = 0; d < OUTDIM; d++) {
                     dC[nD + d] += (Y[nD + d] - Y[mD + d]) * mult;
                 }
             }
-            mD += D;
+            mD +=OUTDIM;
 		}
         nN += N;
-        nD += D;
+        nD +=OUTDIM;
 	}
 
     // Free memory
@@ -320,13 +321,13 @@ void TSNE<T, OUTDIM>::computeExactGradient(T* P, T* Y, int N, int D, T* dC) {
 
 // Evaluate t-SNE cost function (exactly)
 template<typename T, int OUTDIM>
-T TSNE<T, OUTDIM>::evaluateError(T* P, T* Y, int N, int D) {
+T TSNE<T, OUTDIM>::evaluateError(T* P, T* Y, int N) {
 
     // Compute the squared Euclidean distance matrix
     T* DD = (T*) malloc(N * N * sizeof(T));
     T* Q = (T*) malloc(N * N * sizeof(T));
     if(DD == NULL || Q == NULL) { printf("Memory allocation failed!\n"); exit(1); }
-    computeSquaredEuclideanDistance(Y, N, D, DD);
+    computeSquaredEuclideanDistance(Y, N, OUTDIM, DD);
 
     // Compute Q-matrix and normalization sum
     int nN = 0;
@@ -357,12 +358,12 @@ T TSNE<T, OUTDIM>::evaluateError(T* P, T* Y, int N, int D) {
 
 // Evaluate t-SNE cost function (approximately)
 template<typename T, int OUTDIM>
-T TSNE<T, OUTDIM>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, int D, T theta)
+T TSNE<T, OUTDIM>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, T theta)
 {
 
     // Get estimate of normalization term
-    SPTree<T, 2>* tree = new SPTree<T, 2>(Y, N);
-    T* buff = (T*) calloc(D, sizeof(T));
+    SPTree<T, OUTDIM>* tree = new SPTree<T, OUTDIM>(Y, N);
+    T buff[OUTDIM];
     T sum_Q = .0;
     for(int n = 0; n < N; n++)  {
         sum_Q += tree->computeNonEdgeForces(n, theta, buff);
@@ -372,21 +373,19 @@ T TSNE<T, OUTDIM>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* va
     int ind1, ind2;
     T C = .0, Q;
     for(int n = 0; n < N; n++) {
-        ind1 = n * D;
+        ind1 = n * OUTDIM;
         for(int i = row_P[n]; i < row_P[n + 1]; i++) {
             Q = .0;
-            ind2 = col_P[i] * D;
-            for(int d = 0; d < D; d++) buff[d]  = Y[ind1 + d];
-            for(int d = 0; d < D; d++) buff[d] -= Y[ind2 + d];
-            for(int d = 0; d < D; d++) Q += buff[d] * buff[d];
+            ind2 = col_P[i] * OUTDIM;
+            for(int d = 0; d < OUTDIM; d++) buff[d]  = Y[ind1 + d];
+            for(int d = 0; d < OUTDIM; d++) buff[d] -= Y[ind2 + d];
+            for(int d = 0; d < OUTDIM; d++) Q += buff[d] * buff[d];
             Q = (1.0 / (1.0 + Q)) / sum_Q;
             C += val_P[i] * log((val_P[i] + FLT_MIN) / (Q + FLT_MIN));
         }
     }
 
     // Clean up memory
-    free(buff);
-    delete tree;
     return C;
 }
 
@@ -728,9 +727,9 @@ template<typename T>
 int run_tSNE(T *inputData, T *outputData, int N, int in_dims, int out_dims, T theta, T perplexity, int rand_seed, bool verbose) {
 
   if (out_dims == 2) {
-	  return TSNE<T, 2>::run(inputData, N, in_dims, outputData, out_dims, perplexity, theta, rand_seed, false, verbose);
+	  return TSNE<T, 2>::run(inputData, N, in_dims, outputData, perplexity, theta, rand_seed, false, verbose);
   } else if (out_dims == 3) {
-    return TSNE<T, 3>::run(inputData, N, in_dims, outputData, out_dims, perplexity, theta, rand_seed, false, verbose);
+    return TSNE<T, 3>::run(inputData, N, in_dims, outputData, perplexity, theta, rand_seed, false, verbose);
   } else {
     printf ("currently supports out_dims == 2 only");
     return 2;
