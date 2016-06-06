@@ -46,8 +46,8 @@
 
 using namespace std;
 
-template<typename T>// Perform t-SNE
-int TSNE<T>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
+template<typename T, int OUTDIM>// Perform t-SNE
+int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, int rand_seed,
                bool skip_random_init, bool verbose, int max_iter, int stop_lying_iter, int mom_switch_iter) {
 
     // Set random seed
@@ -238,12 +238,12 @@ int TSNE<T>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, i
 
 
 // Compute gradient of the t-SNE cost function (using Barnes-Hut algorithm)
-template<typename T>
-void TSNE<T>::computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, int D, T* dC, T theta)
+template<typename T, int OUTDIM>
+void TSNE<T, OUTDIM>::computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_col_P, T* inp_val_P, T* Y, int N, int D, T* dC, T theta)
 {
 
     // Construct space-partitioning tree on current map
-    SPTree<T, 2>* tree = new SPTree<T, 2>(Y, N);
+    SPTree<T, OUTDIM>* tree = new SPTree<T, OUTDIM>(Y, N);
 
     // Compute all terms required for t-SNE gradient
     T sum_Q = .0;
@@ -268,8 +268,8 @@ void TSNE<T>::computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_c
 }
 
 // Compute gradient of the t-SNE cost function (exact)
-template<typename T>
-void TSNE<T>::computeExactGradient(T* P, T* Y, int N, int D, T* dC) {
+template<typename T, int OUTDIM>
+void TSNE<T, OUTDIM>::computeExactGradient(T* P, T* Y, int N, int D, T* dC) {
 
 	// Make sure the current gradient contains zeros
 	for(int i = 0; i < N * D; i++) dC[i] = 0.0;
@@ -319,8 +319,8 @@ void TSNE<T>::computeExactGradient(T* P, T* Y, int N, int D, T* dC) {
 
 
 // Evaluate t-SNE cost function (exactly)
-template<typename T>
-T TSNE<T>::evaluateError(T* P, T* Y, int N, int D) {
+template<typename T, int OUTDIM>
+T TSNE<T, OUTDIM>::evaluateError(T* P, T* Y, int N, int D) {
 
     // Compute the squared Euclidean distance matrix
     T* DD = (T*) malloc(N * N * sizeof(T));
@@ -356,8 +356,8 @@ T TSNE<T>::evaluateError(T* P, T* Y, int N, int D) {
 }
 
 // Evaluate t-SNE cost function (approximately)
-template<typename T>
-T TSNE<T>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, int D, T theta)
+template<typename T, int OUTDIM>
+T TSNE<T, OUTDIM>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* Y, int N, int D, T theta)
 {
 
     // Get estimate of normalization term
@@ -392,8 +392,8 @@ T TSNE<T>::evaluateError(unsigned int* row_P, unsigned int* col_P, T* val_P, T* 
 
 
 // Compute input similarities with a fixed perplexity
-template<typename T>
-void TSNE<T>::computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity) {
+template<typename T, int OUTDIM>
+void TSNE<T, OUTDIM>::computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity) {
 
 	// Compute the squared Euclidean distance matrix
 	T* DD = (T*) malloc(N * N * sizeof(T));
@@ -464,8 +464,8 @@ void TSNE<T>::computeGaussianPerplexity(T* X, int N, int D, T* P, T perplexity) 
 
 
 // Compute input similarities with a fixed perplexity using ball trees (this function allocates memory another function should free)
-template<typename T>
-void TSNE<T>::computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K, bool verbose) {
+template<typename T, int OUTDIM>
+void TSNE<T, OUTDIM>::computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, T** _val_P, T perplexity, int K, bool verbose) {
 
     if(perplexity > K) printf("Perplexity should be lower than K!\n");
 
@@ -568,8 +568,8 @@ void TSNE<T>::computeGaussianPerplexity(T* X, int N, int D, unsigned int** _row_
 
 
 // Symmetrizes a sparse matrix
-template<typename T>
-void symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P, T** _val_P, int N) {
+template<typename T, int OUTDIM>
+void TSNE<T, OUTDIM>::symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P, T** _val_P, int N) {
 
     // Get sparse matrix
     unsigned int* row_P = *_row_P;
@@ -657,8 +657,8 @@ void symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P, T** _val_P, 
 }
 
 // Compute squared Euclidean distance matrix
-template<typename T>
-void TSNE<T>::computeSquaredEuclideanDistance(T* X, int N, int D, T* DD) {
+template<typename T, int OUTDIM>
+void TSNE<T, OUTDIM>::computeSquaredEuclideanDistance(T* X, int N, int D, T* DD) {
     const T* XnD = X;
     for(int n = 0; n < N; ++n, XnD += D) {
         const T* XmD = XnD + D;
@@ -677,8 +677,8 @@ void TSNE<T>::computeSquaredEuclideanDistance(T* X, int N, int D, T* DD) {
 
 
 // Makes data zero-mean
-template<typename T>
-void TSNE<T>::zeroMean(T* X, int N, int D) {
+template<typename T, int OUTDIM>
+void TSNE<T, OUTDIM>::zeroMean(T* X, int N, int D) {
 
 	// Compute data mean
 	T* mean = (T*) calloc(D, sizeof(T));
@@ -726,10 +726,13 @@ T randn() {
 
 template<typename T>
 int run_tSNE(T *inputData, T *outputData, int N, int in_dims, int out_dims, T theta, T perplexity, int rand_seed, bool verbose) {
-  if (out_dims !== 2) {
-    printf ("currently supports out_dims == 2 only");
-    return 2
-  }
 
-	return TSNE<T>::run(inputData, N, in_dims, outputData, out_dims, perplexity, theta, rand_seed, false, verbose);
+  if (out_dims == 2) {
+	  return TSNE<T, 2>::run(inputData, N, in_dims, outputData, out_dims, perplexity, theta, rand_seed, false, verbose);
+  } else if (out_dims == 3) {
+    return TSNE<T, 3>::run(inputData, N, in_dims, outputData, out_dims, perplexity, theta, rand_seed, false, verbose);
+  } else {
+    printf ("currently supports out_dims == 2 only");
+    return 2;
+  }
 }
