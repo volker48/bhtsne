@@ -99,8 +99,8 @@ public:
     void rebuildTree();
     void getAllIndices(unsigned int* indices);
     unsigned int getDepth();
-    T computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[]);
-    void computeEdgeForces(unsigned int* row_P, unsigned int* col_P, T* val_P, int N, T* pos_f);
+    T computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[]) const;
+    void computeEdgeForces(unsigned int* row_P, unsigned int* col_P, T* val_P, int N, T pos_f[]) const;
     void print();
 
 private:

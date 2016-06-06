@@ -58,8 +58,8 @@ int TSNE<T>::run(T* X, int N, int D, T* Y, int no_dims, T perplexity, T theta, i
           srand((unsigned int) rand_seed);
       } else {
           if (verbose)
-            printf("Using current time as random seed...\n");
-          srand(time(NULL));
+            printf("Using 0xDEADBEEF as random seed...\n");
+          srand(0xDEADBEEF);
       }
     }
 
@@ -250,7 +250,9 @@ void TSNE<T>::computeGradient(T* P, unsigned int* inp_row_P, unsigned int* inp_c
     T* pos_f = (T*) calloc(N * D, sizeof(T));
     T* neg_f = (T*) calloc(N * D, sizeof(T));
     if(pos_f == NULL || neg_f == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+
     tree->computeEdgeForces(inp_row_P, inp_col_P, inp_val_P, N, pos_f);
+
     #pragma omp parallel for schedule(guided) reduction(+:sum_Q)
     for(int n = 0; n < N; n++) {
         sum_Q += tree->computeNonEdgeForces(n, theta, neg_f + n * D);

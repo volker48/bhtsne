@@ -363,7 +363,7 @@ unsigned int SPTree<T>::getDepth() {
 
 // Compute non-edge forces using Barnes-Hut algorithm
 template<typename T>
-T SPTree<T>::computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[])
+T SPTree<T>::computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[]) const
 {
     T resultSum = 0;
     T localbuff[32];
@@ -383,8 +383,8 @@ T SPTree<T>::computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[])
         cur_width = boundary->getWidth(d);
         max_width = (max_width > cur_width) ? max_width : cur_width;
     }
+    
     if(is_leaf || max_width / sqrt(D) < theta) {
-
         // Compute and add t-SNE force between point and current node
         D = 1.0 / (1.0 + D);
         T mult = cum_size * D;
@@ -393,22 +393,20 @@ T SPTree<T>::computeNonEdgeForces(unsigned int point_index, T theta, T neg_f[])
         for(unsigned int d = 0; d < dimension; d++) neg_f[d] += mult * localbuff[d];
     }
     else {
-
         // Recursively apply Barnes-Hut to children
         for(unsigned int i = 0; i < no_children; i++) {
             resultSum += children[i]->computeNonEdgeForces(point_index, theta, neg_f);
         }
     }
+
     return resultSum;
 }
 
 
 // Computes edge forces
 template<typename T>
-void SPTree<T>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, T* val_P, int N, T* pos_f)
+void SPTree<T>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, T* val_P, int N, T pos_f[]) const
 {
-    // TODO: need to devise separate buffer for each iteration
-    // figure out if ind1 can be precomputed (looks like it can be)
     #pragma omp parallel for schedule(static)
     for(unsigned int n = 0; n < N; n++) {
         unsigned int ind1 = n*dimension;
