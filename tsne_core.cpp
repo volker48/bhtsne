@@ -53,7 +53,7 @@ int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, T perplexity, T theta, int ra
     int no_dims = OUTDIM;
     // Set random seed
     if (skip_random_init != true) {
-      if(rand_seed >= 0) {
+      if(rand_seed > 0) {
           if (verbose)
             printf("Using random seed: %d\n", rand_seed);
           srand((unsigned int) rand_seed);

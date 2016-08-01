@@ -20,9 +20,11 @@ bool load_data(T** data, int* n, int* d, int* no_dims, T* theta, T* perplexity, 
 	*data = (T*) malloc(*d * *n * sizeof(T));
     if(*data == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     fread(*data, sizeof(T), *n * *d, h);                               // the data
+
+    *rand_seed = 0;
     if(!feof(h)) fread(rand_seed, sizeof(int), 1, h);                       // random seed
 	fclose(h);
-	printf("Read the %i x %i data matrix successfully!\n", *n, *d);
+    printf("Read the %i x %i data matrix successfully!\n", *n, *d);
 	return true;
 }
 
