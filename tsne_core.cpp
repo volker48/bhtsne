@@ -133,7 +133,7 @@ int TSNE<T, OUTDIM>::run(T* X, int N, int D, T* Y, T perplexity, T theta, int ra
 
         int nN = 0;
         for(int n = 0; n < N; n++) {
-            int mN = 0;
+            int mN = (n + 1) * N;
             for(int m = n + 1; m < N; m++) {
                 P[nN + m] += P[mN + n];
                 P[mN + n]  = P[nN + m];
