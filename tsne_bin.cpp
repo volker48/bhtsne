@@ -4,7 +4,7 @@
 // Function that loads data from a t-SNE file
 // Note: this function does a malloc that should be freed elsewhere
 template<typename T>
-bool load_data(T** data, int* n, int* d, int* no_dims, T* theta, T* perplexity, int* rand_seed) {
+bool load_data(T** data, int* n, int* d, int* no_dims, int* max_iter, T* theta, T* perplexity, int* rand_seed) {
 
 	// Open file, read first 2 integers, allocate memory, and read the data
     FILE *h;
@@ -17,6 +17,7 @@ bool load_data(T** data, int* n, int* d, int* no_dims, T* theta, T* perplexity, 
     fread(theta, sizeof(T), 1, h);										// gradient accuracy
 	fread(perplexity, sizeof(T), 1, h);								// perplexity
 	fread(no_dims, sizeof(int), 1, h);                                      // output dimensionality
+        fread(max_iter, sizeof(int), 1, h);
 	*data = (T*) malloc(*d * *n * sizeof(T));
     if(*data == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     fread(*data, sizeof(T), *n * *d, h);                               // the data
@@ -49,13 +50,13 @@ void save_data(T* data, int* landmarks, T* costs, int n, int d) {
 
 
 template<typename T>
-void run_tSNE_andSave(T *inputData, int N, int D, int no_dims, T theta, T perplexity, int rand_seed) {
+void run_tSNE_andSave(T *inputData, int N, int D, int no_dims, int max_iter, T theta, T perplexity, int rand_seed) {
 	// Allocate memory for the output
 	T* Y = (T*) malloc(N * no_dims * sizeof(T));
 	if(Y == NULL) { printf("Memory allocation failed!\n"); exit(1); }
 
 
-    int res = run_tSNE(inputData, Y, N, D, no_dims, theta, perplexity, rand_seed, true);
+    int res = run_tSNE(inputData, Y, N, D, no_dims, max_iter, theta, perplexity, rand_seed, true);
 
     if (res > 0)
         exit(res);
@@ -84,12 +85,12 @@ void run_tSNE_andSave(T *inputData, int N, int D, int no_dims, T theta, T perple
 int main() {
 
     // Define some variables
-	int N, D, no_dims, rand_seed;
+	int N, D, no_dims, max_iter, rand_seed;
 	double perplexity, theta, *data;
 
     // Read the parameters and the dataset
-	if(load_data<double>(&data, &N, &D, &no_dims, &theta, &perplexity, &rand_seed)) {
-         run_tSNE_andSave<double>(data, N, D, no_dims, theta, perplexity, rand_seed);
+	if(load_data<double>(&data, &N, &D, &no_dims, &max_iter, &theta, &perplexity, &rand_seed)) {
+         run_tSNE_andSave<double>(data, N, D, no_dims, max_iter, theta, perplexity, rand_seed);
         free(data); data = NULL;
     }
 }

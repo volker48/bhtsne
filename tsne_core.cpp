@@ -724,12 +724,12 @@ T randn() {
 
 
 template<typename T>
-int run_tSNE(T *inputData, T *outputData, int N, int in_dims, int out_dims, T theta, T perplexity, int rand_seed, bool verbose) {
+int run_tSNE(T *inputData, T *outputData, int N, int in_dims, int out_dims, int max_iter, T theta, T perplexity, int rand_seed, bool verbose) {
 
   if (out_dims == 2) {
-	  return TSNE<T, 2>::run(inputData, N, in_dims, outputData, perplexity, theta, rand_seed, false, verbose);
+	  return TSNE<T, 2>::run(inputData, N, in_dims, outputData, perplexity, theta, rand_seed, false, verbose, max_iter);
   } else if (out_dims == 3) {
-    return TSNE<T, 3>::run(inputData, N, in_dims, outputData, perplexity, theta, rand_seed, false, verbose);
+    return TSNE<T, 3>::run(inputData, N, in_dims, outputData, perplexity, theta, rand_seed, false, verbose, max_iter);
   } else {
     printf ("currently supports out_dims == 2 only");
     return 2;
