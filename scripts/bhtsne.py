@@ -62,7 +62,7 @@ INITIAL_DIMENSIONS = 50
 DEFAULT_PERPLEXITY = 50
 DEFAULT_THETA = 0.5
 EMPTY_SEED = -1
-
+DEFAULT_MAX_ITERATIONS=1000
 ###
 
 def _argparse():
@@ -79,6 +79,7 @@ def _argparse():
     argparse.add_argument('-i', '--input', type=FileType('r'), default=stdin)
     argparse.add_argument('-o', '--output', type=FileType('w'),
             default=stdout)
+    argparse.add_argument('-m', '--max_iter', type=int, default=DEFAULT_MAX_ITERATIONS)
     return argparse
 
 
@@ -95,7 +96,7 @@ def _read_unpack(fmt, fh):
     return unpack(fmt, fh.read(calcsize(fmt)))
 
 def bh_tsne(samples, no_dims=DEFAULT_NO_DIMS, initial_dims=INITIAL_DIMENSIONS, perplexity=DEFAULT_PERPLEXITY,
-            theta=DEFAULT_THETA, randseed=EMPTY_SEED, verbose=False):
+            theta=DEFAULT_THETA, randseed=EMPTY_SEED, verbose=False, max_iter=DEFAULT_MAX_ITERATIONS):
 
     samples -= np.mean(samples, axis=0)
     cov_x = np.dot(np.transpose(samples), samples)
@@ -123,7 +124,7 @@ def bh_tsne(samples, no_dims=DEFAULT_NO_DIMS, initial_dims=INITIAL_DIMENSIONS, p
         #   vanilla tsne
         with open(path_join(tmp_dir_path, 'data.dat'), 'wb') as data_file:
             # Write the bh_tsne header
-            data_file.write(pack('iiddi', sample_count, sample_dim, theta, perplexity, no_dims))
+            data_file.write(pack('iiddii', sample_count, sample_dim, theta, perplexity, no_dims, max_iter))
             # Then write the data
             for sample in samples:
                 data_file.write(pack('{}d'.format(len(sample)), *sample))
@@ -150,7 +151,7 @@ def bh_tsne(samples, no_dims=DEFAULT_NO_DIMS, initial_dims=INITIAL_DIMENSIONS, p
             result_samples, result_dims = _read_unpack('ii', output_file)
             # Collect the results, but they may be out of order
             results = [_read_unpack('{}d'.format(result_dims), output_file)
-                for _ in xrange(result_samples)]
+                for _ in range(result_samples)]
             # Now collect the landmark data so that we can return the data in
             #   the order it arrived
             results = [(_read_unpack('i', output_file), e) for e in results]
@@ -181,7 +182,7 @@ def main(args):
         data.append([float(e) for e in sample_data])
 
     for result in bh_tsne(data, no_dims=argp.no_dims, perplexity=argp.perplexity, theta=argp.theta, randseed=argp.randseed,
-            verbose=argp.verbose, initial_dims=argp.initial_dims):
+            verbose=argp.verbose, initial_dims=argp.initial_dims, max_iter=argp.max_iter):
         fmt = ''
         for i in range(1, len(result)):
             fmt = fmt + '{}\t'
